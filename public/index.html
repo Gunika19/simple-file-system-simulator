@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure File Sharing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        h2 {
+            color: #555;
+            margin: 30px 0 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        input, button, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.secondary:hover {
+            background: #545b62;
+        }
+
+        button.danger {
+            background: #dc3545;
+        }
+
+        button.danger:hover {
+            background: #c82333;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .error-box {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .file-list {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .file-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-item strong {
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .file-item .meta {
+            font-size: 13px;
+            color: #666;
+            margin: 3px 0;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 5px;
+        }
+
+        .tag.uploaded { background: #d4edda; color: #155724; }
+        .tag.pending { background: #fff3cd; color: #856404; }
+        .tag.expired { background: #f8d7da; color: #721c24; }
+
+        .user-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .tab.active {
+            border-bottom-color: #007bff;
+            color: #007bff;
+        }
+
+        .code-display {
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            letter-spacing: 5px;
+            font-family: monospace;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            color: #555;
+            margin-top: 10px;
+        }
+
+        .email-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 40px;
+            margin-bottom: 5px;
+        }
+
+        .email-tag {
+            background: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .email-tag button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            width: 16px;
+            height: 16px;
+            margin: 0;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Secure File Sharing</h1>
+        <p style="color: #666; margin-bottom: 20px;">Share files securely with time-limited access</p>
+
+        <!-- Auth Section -->
+        <div id="auth-section">
+            <div class="tabs">
+                <button class="tab active" onclick="switchAuthTab('login')">Login</button>
+                <button class="tab" onclick="switchAuthTab('register')">Register</button>
+            </div>
+
+            <div id="login-form">
+                <label>Email</label>
+                <input type="email" id="login-email" placeholder="your@email.com">
+                
+                <label>Password</label>
+                <input type="password" id="login-password" placeholder="Enter password">
+                
+                <button onclick="login()">Login</button>
+            </div>
+
+            <div id="register-form" class="hidden">
+                <label>Name</label>
+                <input type="text" id="register-name" placeholder="Your name">
+                
+                <label>Email</label>
+                <input type="email" id="register-email" placeholder="your@email.com">
+                
+                <label>Password</label>
+                <input type="password" id="register-password" placeholder="Min 8 characters">
+                
+                <button onclick="register()">Register</button>
+            </div>
+        </div>
+
+        <!-- Main App Section -->
+        <div id="app-section" class="hidden">
+            <div class="user-info">
+                👤 Logged in as: <strong id="user-email"></strong>
+                <button onclick="logout()" style="width: auto; padding: 5px 15px; margin-left: 10px;">Logout</button>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('upload')">Upload File</button>
+                <button class="tab" onclick="switchTab('download')">Download File</button>
+                <button class="tab" onclick="switchTab('my-files')">My Files</button>
+            </div>
+
+            <!-- Upload Tab -->
+            <div id="upload-tab">
+                <h2>📤 Upload & Share File</h2>
+                
+                <label>Select File</label>
+                <input type="file" id="file-input">
+                
+                <label>Target User Emails (press Enter after each)</label>
+                <div class="email-tags" id="email-tags"></div>
+                <input type="email" id="email-input" placeholder="user@example.com" onkeypress="handleEmailInput(event)">
+                
+                <label>Expiry Duration (minutes)</label>
+                <input type="number" id="expiry-duration" value="5" min="1" max="1440">
+                
+                <label>Folder (optional)</label>
+                <input type="text" id="folder-input" placeholder="documents" value="uploads">
+                
+                <button onclick="uploadFile()">Upload & Generate Access Code</button>
+
+                <div id="upload-result"></div>
+            </div>
+
+            <!-- Download Tab -->
+            <div id="download-tab" class="hidden">
+                <h2>📥 Download File</h2>
+                
+                <label>S3 Key</label>
+                <input type="text" id="download-key" placeholder="uploads/uuid-filename.pdf">
+                
+                <label>Access Code</label>
+                <input type="text" id="access-code" placeholder="123456" maxlength="6">
+                
+                <button onclick="downloadFile()">Get Download Link</button>
+
+                <div id="download-result"></div>
+            </div>
+
+            <!-- My Files Tab -->
+            <div id="my-files-tab" class="hidden">
+                <h2>📁 My Uploaded Files</h2>
+                
+                <button onclick="loadMyFiles()">Refresh Files</button>
+
+                <div id="files-list"></div>
+            </div>
+        </div>
+
+        <div id="message-area"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        let token = localStorage.getItem('token');
+        let userEmail = localStorage.getItem('userEmail');
+        let targetEmails = [];
+
+        // Initialize
+        if (token) {
+            showApp();
+        }
+
+        function switchAuthTab(tab) {
+            document.querySelectorAll('#auth-section .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (tab === 'login') {
+                document.getElementById('login-form').classList.remove('hidden');
+                document.getElementById('register-form').classList.add('hidden');
+            } else {
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('register-form').classList.remove('hidden');
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('#app-section .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('upload-tab').classList.add('hidden');
+            document.getElementById('download-tab').classList.add('hidden');
+            document.getElementById('my-files-tab').classList.add('hidden');
+            
+            document.getElementById(tab + '-tab').classList.remove('hidden');
+            
+            if (tab === 'my-files') {
+                loadMyFiles();
+            }
+        }
+
+        async function register() {
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+
+            if (!name || !email || !password) {
+                showMessage('Please fill all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    token = data.data.token;
+                    userEmail = data.data.user.email;
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('userEmail', userEmail);
+                    showMessage('Registration successful!', 'success');
+                    showApp();
+                } else {
+                    showMessage(data.message || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, 'error');
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                showMessage('Please fill all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    token = data.data.token;
+                    userEmail = data.data.user.email;
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('userEmail', userEmail);
+                    showMessage('Login successful!', 'success');
+                    showApp();
+                } else {
+                    showMessage(data.message || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, 'error');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userEmail');
+            token = null;
+            userEmail = null;
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('app-section').classList.add('hidden');
+            showMessage('Logged out successfully', 'success');
+        }
+
+        function showApp() {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('app-section').classList.remove('hidden');
+            document.getElementById('user-email').textContent = userEmail;
+        }
+
+        function handleEmailInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const email = document.getElementById('email-input').value.trim();
+                
+                if (email && email.includes('@')) {
+                    if (!targetEmails.includes(email)) {
+                        targetEmails.push(email);
+                        renderEmailTags();
+                        document.getElementById('email-input').value = '';
+                    } else {
+                        showMessage('Email already added', 'warning');
+                    }
+                } else {
+                    showMessage('Please enter a valid email', 'warning');
+                }
+            }
+        }
+
+        function removeEmail(email) {
+            targetEmails = targetEmails.filter(e => e !== email);
+            renderEmailTags();
+        }
+
+        function renderEmailTags() {
+            const container = document.getElementById('email-tags');
+            container.innerHTML = targetEmails.map(email => `
+                <div class="email-tag">
+                    ${email}
+                    <button onclick="removeEmail('${email}')">×</button>
+                </div>
+            `).join('');
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('file-input');
+            const expiryDuration = parseInt(document.getElementById('expiry-duration').value);
+            const folder = document.getElementById('folder-input').value || 'uploads';
+
+            if (!fileInput.files[0]) {
+                showMessage('Please select a file', 'error');
+                return;
+            }
+
+            if (targetEmails.length === 0) {
+                showMessage('Please add at least one target email', 'error');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const resultDiv = document.getElementById('upload-result');
+            resultDiv.innerHTML = '<div class="info-box"><div class="spinner"></div>Step 1: Getting presigned URL...</div>';
+
+            try {
+                // Step 1: Get presigned URL
+                const presignedResponse = await fetch(`${API_BASE}/upload/presigned-url`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        fileName: file.name,
+                        fileType: file.type,
+                        folder: folder,
+                        targetUserEmails: targetEmails,
+                        expiryDurationMinutes: expiryDuration
+                    })
+                });
+
+                const presignedData = await presignedResponse.json();
+
+                if (!presignedResponse.ok) {
+                    throw new Error(presignedData.message || 'Failed to get presigned URL');
+                }
+
+                const { uploadUrl, key, accessCode } = presignedData.data;
+
+                resultDiv.innerHTML = '<div class="info-box"><div class="spinner"></div>Step 2: Uploading to S3...</div>';
+
+                // Step 2: Upload to S3
+                const uploadResponse = await fetch(uploadUrl, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': file.type },
+                    body: file
+                });
+
+                if (!uploadResponse.ok) {
+                    throw new Error('Failed to upload to S3');
+                }
+
+                resultDiv.innerHTML = '<div class="info-box"><div class="spinner"></div>Step 3: Confirming upload...</div>';
+
+                // Step 3: Confirm upload
+                const confirmResponse = await fetch(`${API_BASE}/upload/confirm`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ key })
+                });
+
+                const confirmData = await confirmResponse.json();
+
+                if (!confirmResponse.ok) {
+                    throw new Error(confirmData.message || 'Failed to confirm upload');
+                }
+
+                // Success!
+                resultDiv.innerHTML = `
+                    <div class="success-box">
+                        <h3 style="margin-bottom: 10px;">✅ Upload Successful!</h3>
+                        <p style="margin-bottom: 10px;"><strong>Share this access code with target users:</strong></p>
+                        <div class="code-display">${accessCode}</div>
+                        <p style="margin-top: 15px;"><strong>S3 Key:</strong> ${key}</p>
+                        <p><strong>Target Users:</strong> ${targetEmails.join(', ')}</p>
+                        <p><strong>Expiry Duration:</strong> ${expiryDuration} minutes</p>
+                        <p style="margin-top: 10px; font-size: 13px; color: #666;">
+                            ⏱️ Timer starts when the first target user accesses the file
+                        </p>
+                    </div>
+                `;
+
+                // Reset form
+                fileInput.value = '';
+                targetEmails = [];
+                renderEmailTags();
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error-box">❌ ${error.message}</div>`;
+            }
+        }
+
+        async function downloadFile() {
+            const s3Key = document.getElementById('download-key').value.trim();
+            const accessCode = document.getElementById('access-code').value.trim();
+            const resultDiv = document.getElementById('download-result');
+
+            if (!s3Key || !accessCode) {
+                showMessage('Please enter both S3 key and access code', 'error');
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="info-box"><div class="spinner"></div>Requesting download URL...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/upload/download`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ s3Key, accessCode })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to get download URL');
+                }
+
+                const { downloadUrl, fileName, expiresAt, timeRemainingMinutes } = data.data;
+
+                resultDiv.innerHTML = `
+                    <div class="success-box">
+                        <h3 style="margin-bottom: 10px;">✅ Access Granted!</h3>
+                        <p><strong>File:</strong> ${fileName}</p>
+                        <p><strong>Expires At:</strong> ${new Date(expiresAt).toLocaleString()}</p>
+                        <p><strong>Time Remaining:</strong> ${timeRemainingMinutes} minutes</p>
+                        <button onclick="window.open('${downloadUrl}', '_blank')" style="margin-top: 15px;">
+                            📥 Download File
+                        </button>
+                    </div>
+                `;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error-box">❌ ${error.message}</div>`;
+            }
+        }
+
+        async function loadMyFiles() {
+            const listDiv = document.getElementById('files-list');
+            listDiv.innerHTML = '<div class="info-box"><div class="spinner"></div>Loading files...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/upload/my-files`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to load files');
+                }
+
+                const files = data.data;
+
+                if (files.length === 0) {
+                    listDiv.innerHTML = '<div class="info-box">No files uploaded yet.</div>';
+                    return;
+                }
+
+                listDiv.innerHTML = '<div class="file-list">' + files.map(file => {
+                    const statusClass = file.status === 'uploaded' ? 'uploaded' : 
+                                       file.status === 'pending' ? 'pending' : 'expired';
+                    const firstAccessed = file.firstAccessedAt ? 
+                        new Date(file.firstAccessedAt).toLocaleString() : 'Not yet accessed';
+                    const expiresAt = file.expiresAt ? 
+                        new Date(file.expiresAt).toLocaleString() : 'Not set (not accessed yet)';
+                    
+                    return `
+                        <div class="file-item">
+                            <strong>📄 ${file.fileName}</strong>
+                            <span class="tag ${statusClass}">${file.status}</span>
+                            <div class="meta">🔑 Access Code: <strong>${file.accessCode}</strong></div>
+                            <div class="meta">🎯 Target Users: ${file.targetUserEmails.join(', ')}</div>
+                            <div class="meta">⏱️ Expiry Duration: ${file.expiryDurationMinutes} minutes</div>
+                            <div class="meta">👁️ First Accessed: ${firstAccessed}</div>
+                            <div class="meta">⏰ Expires At: ${expiresAt}</div>
+                            <div class="meta" style="margin-top: 5px;">📁 S3 Key: <code>${file.s3Key}</code></div>
+                            <div class="meta">📅 Uploaded: ${new Date(file.createdAt).toLocaleString()}</div>
+                        </div>
+                    `;
+                }).join('') + '</div>';
+
+            } catch (error) {
+                listDiv.innerHTML = `<div class="error-box">❌ ${error.message}</div>`;
+            }
+        }
+
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('message-area');
+            const className = type === 'success' ? 'success-box' : 
+                            type === 'warning' ? 'warning-box' : 'error-box';
+            
+            messageArea.innerHTML = `<div class="${className}">${message}</div>`;
+            
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
